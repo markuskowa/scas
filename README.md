@@ -13,6 +13,7 @@ Filesystem based content addressed storage with garbage collection written in C+
 
 Usage:
 
+```
 - Create a new store directory structure:
   scas init <new_store_directory>
 
@@ -30,5 +31,5 @@ Usage:
 
 - Run garbage collection:
   scas gc <store directory>
-
+```
 
