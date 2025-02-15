@@ -34,7 +34,7 @@ namespace scas {
     if (!ctx)
       throw(std::runtime_error("EVP_MD_CTX_new failed"));
 
-    if (EVP_DigestInit_ex(ctx, EVP_sha256(), nullptr) != 1) {
+    if (EVP_DigestInit_ex(ctx, digest_type, nullptr) != 1) {
       clear();
       throw(std::runtime_error("EVP_DigestInit_ex failed"));
     }
@@ -55,7 +55,7 @@ namespace scas {
 
   Hash::hash_t Hash::get_hash_binary(){
     unsigned int len = 0;
-    hash_t hash(SHA256_DIGEST_LENGTH);
+    hash_t hash(digest_length);
 
     if (EVP_DigestFinal_ex(ctx, hash.data(), &len) != 1) {
       clear();
@@ -73,7 +73,7 @@ namespace scas {
   }
 
   std::string Hash::convert_hash_to_string(const hash_t& hash){
-    if (hash.size() != SHA256_DIGEST_LENGTH)
+    if (hash.size() != digest_length)
       throw std::invalid_argument("Invalid hash length");
 
     return base64_encode(hash);
@@ -82,7 +82,7 @@ namespace scas {
   Hash::hash_t Hash::convert_string_to_hash(const std::string& string_hash){
     hash_t hash = base64_decode(string_hash);
 
-    if (hash.size() != SHA256_DIGEST_LENGTH ) {
+    if (hash.size() != digest_length ) {
       throw std::invalid_argument("base64 encoded string length mismatched");
     }
 
@@ -105,7 +105,7 @@ namespace scas {
 
 
     hash_t binary_hash;
-    binary_hash.reserve(SHA256_DIGEST_LENGTH);
+    binary_hash.reserve(digest_length);
 
     for (size_t i = 0; i < string_hash.length(); i += 2) {
         std::string byte_str = string_hash.substr(i, 2);
@@ -138,8 +138,8 @@ namespace scas {
     }
 
     int encoded_len = (data.size() + 2) / 3 * 4; // Calculate encoded length (important!)
-    std::string encoded(encoded_len, '\0'); // Initialize with correct size
-                                            //
+    std::string encoded(encoded_len, '\0');
+
     auto ol = EVP_EncodeBlock(
         reinterpret_cast<unsigned char*>(encoded.data()),
         reinterpret_cast<const unsigned char*>(data.data()),
@@ -177,12 +177,12 @@ namespace scas {
         decoded.data(), &olength,
         reinterpret_cast<const unsigned char*>(encoded.data()), encoded.size());
 
-    if (ret < 0){ // Invalid code or final pad "=" missing
+    if (ret < 0){ // Invalid chars
       EVP_ENCODE_CTX_free(ctx);
       throw std::runtime_error("base64 decode failed. Invalid characters.");
     }
 
-    if (ret == 1){ // Invalid code or final pad "=" missing
+    if (ret == 1){ // final pad "=" missing
       EVP_ENCODE_CTX_free(ctx);
       throw std::runtime_error("base64 decode failed. Missing padding character =.");
     }

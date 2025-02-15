@@ -17,6 +17,9 @@ namespace scas {
     private:
       EVP_MD_CTX* ctx;
 
+      static const size_t digest_length = SHA256_DIGEST_LENGTH;
+      const EVP_MD* digest_type = EVP_sha256();
+
       void init();
       void clear();
 
@@ -26,7 +29,7 @@ namespace scas {
       Hash();
       ~Hash();
 
-      int get_hash_length() { return SHA256_DIGEST_LENGTH; };
+      int get_hash_length() { return digest_length; };
 
       void update(const std::string& input);
       void update(const char* input, size_t n);

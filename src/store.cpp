@@ -31,7 +31,7 @@ namespace scas {
     fs::create_directory(gcroot_dir);
   }
 
-  bool Store::dir_is_valid() {
+  bool Store::store_fs_is_valid() {
     if (!fs::is_directory(data_dir))
       return false;
 
@@ -44,7 +44,7 @@ namespace scas {
     return true;
   }
 
-  bool Store::path_is_in_store(const fs::path& path) const {
+  bool Store::path_coincides_with_store(const fs::path& path) const {
     std::string rel = fs::relative(path, data_dir);
     if (rel.length() == 0) return false;
     if (rel[0] == '.') return false;
@@ -64,7 +64,7 @@ namespace scas {
   }
 
   fs::path Store::copy_to_store(const fs::path& path, std::string& hash_str){
-    if (path_is_in_store(path))
+    if (path_coincides_with_store(path))
       throw std::invalid_argument("Source file can not be in store's data directory");
 
     if (!fs::is_regular_file(path))
@@ -142,7 +142,7 @@ namespace scas {
   }
 
   void Store::create_store_link(const fs::path& link, const std::string& hash){
-    if (path_is_in_store(link))
+    if (path_coincides_with_store(link))
       throw std::invalid_argument("Link can not be in store's data directory");
 
     const fs::path target_path(data_dir / hash);
@@ -233,7 +233,7 @@ namespace scas {
 
         // check if link loops back to correct entry
         const auto target_resolve = fs::read_symlink(target);
-        if (target_resolve.filename() != entry.path().filename() || !path_is_in_store(target_resolve)) {
+        if (target_resolve.filename() != entry.path().filename() || !path_coincides_with_store(target_resolve)) {
           fs::remove(link.path());
           continue;
         }
@@ -258,7 +258,7 @@ namespace scas {
   }
 
   bool Store::verify_store() {
-    if (!dir_is_valid()) return false;
+    if (!store_fs_is_valid()) return false;
 
     // Check data directory
     for (auto const& entry : fs::directory_iterator{data_dir}) {

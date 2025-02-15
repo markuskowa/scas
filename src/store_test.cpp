@@ -19,7 +19,7 @@ TEST_CASE("Store creation", "[store]") {
 
   REQUIRE( fs::is_directory("empty_store/data") );
   REQUIRE( fs::is_directory("empty_store/gc-roots") );
-  REQUIRE( store.dir_is_valid() );
+  REQUIRE( store.store_fs_is_valid() );
 
   REQUIRE_THROWS( store.create_store_fs() );
 
@@ -31,7 +31,7 @@ SCENARIO("Store creation and operation", "[store]") {
   GIVEN("An empty store") {
     scas::Store store("op_store");
     REQUIRE_NOTHROW( store.create_store_fs() );
-    REQUIRE( store.dir_is_valid() );
+    REQUIRE( store.store_fs_is_valid() );
 
     WHEN("Place content directly") {
       std::string hash;
@@ -43,8 +43,8 @@ SCENARIO("Store creation and operation", "[store]") {
         REQUIRE( store.file_is_in_store(hash) );
         REQUIRE( !store.file_is_in_store("no-valid-hash") );
 
-        REQUIRE( store.path_is_in_store(target) );
-        REQUIRE( !store.path_is_in_store(store.get_dir()) ); // top-level is not in data dir
+        REQUIRE( store.path_coincides_with_store(target) );
+        REQUIRE( !store.path_coincides_with_store(store.get_dir()) ); // top-level is not in data dir
       }
 
     }
@@ -97,7 +97,7 @@ SCENARIO("Store integrity", "[store]") {
   GIVEN("An a store with content") {
     scas::Store store("bad_store");
     REQUIRE_NOTHROW( store.create_store_fs() );
-    REQUIRE( store.dir_is_valid() );
+    REQUIRE( store.store_fs_is_valid() );
 
     const std::string fname = "myfile";
     helper_create_file(fname, "my content");
