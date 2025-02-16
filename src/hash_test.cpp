@@ -4,14 +4,15 @@
 
 #include "hash.h"
 #include <catch2/catch_test_macros.hpp>
-#include <catch2/matchers/catch_matchers_vector.hpp>
 
 #include <iostream>
 
 TEST_CASE("hex en/decoding","[hash]"){
-  const scas::Hash::hash_t binary{0x00, 0x11, 0x22, 0xaa};
-  REQUIRE( scas::Hash::bytes_to_hex(binary) == "001122aa" );
-  REQUIRE( scas::Hash::bytes_to_hex(scas::Hash::hex_to_bytes("0123456789abcdef")) == "0123456789abcdef");
+  const scas::Hash::hash_t binary{0x00, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0};
+  std::string str(scas::Hash::get_hash_length()*2, '0');
+  str.replace(0, 17, "00123456789abcdef");
+  REQUIRE( scas::Hash::bytes_to_hex(binary) == str);
+  REQUIRE( scas::Hash::bytes_to_hex(scas::Hash::hex_to_bytes(str)) == str);
 
   // Uneven number of nibbles
   REQUIRE_THROWS ( scas::Hash::hex_to_bytes("1") );
@@ -21,20 +22,20 @@ TEST_CASE("hex en/decoding","[hash]"){
 }
 
 TEST_CASE("base64 coding","[hash]"){
-  const scas::Hash::hash_t clear_text_bin{'s','i','m','p','l','e','\n'};
-  const std::string base64_text("c2ltcGxlCg==");
+  const scas::Hash::hash_t clear_text_bin{0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14, 0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9, 0x24, 0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c, 0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55};
+  const std::string base64_text("47DEQpj8HBSa+-TImW+5JCeuQeRkm5NMpJWZG3hSuFU=");
 
   REQUIRE( scas::Hash::base64_encode(clear_text_bin) == base64_text );
-  REQUIRE_THAT( clear_text_bin, Catch::Matchers::Equals(scas::Hash::base64_decode(base64_text)) );
+  REQUIRE( clear_text_bin == scas::Hash::base64_decode(base64_text) );
 
   // wrong length
-  REQUIRE_THROWS( scas::Hash::base64_decode("c2ltcxlCg==") );
+  REQUIRE_THROWS( scas::Hash::base64_decode("47DEQpj8HBSa+-TImW+5JCeuQeRkm5NMpJWZG3hSu=") );
 
   // invalid chars
-  REQUIRE_THROWS( scas::Hash::base64_decode("c2ltc!xlCg==") );
+  REQUIRE_THROWS( scas::Hash::base64_decode("!?DEQpj8HBSa+-TImW+5JCeuQeRkm5NMpJWZG3hSuFU=") );
 
   // no padding
-  REQUIRE_THROWS( scas::Hash::base64_decode("c2ltcGxlCgcc") );
+  REQUIRE_THROWS( scas::Hash::base64_decode("47DEQpj8HBSa+-TImW+5JCeuQeRkm5NMpJWZG3hSuFU") );
 }
 
 TEST_CASE("base64 <-> hex conversion","[hash]"){
@@ -79,9 +80,7 @@ TEST_CASE("SHA256 - errors", "[hash]") {
   scas::Hash sha256;
 
   std::string deficient_hash_str("001122");
-  std::vector<unsigned char> deficient_hash_bin = { 0x00, 0x11, 0x22 };
 
-  REQUIRE_THROWS(scas::Hash::convert_hash_to_string(deficient_hash_bin) );
   REQUIRE_THROWS(scas::Hash::convert_string_to_hash(deficient_hash_str) );
 }
 

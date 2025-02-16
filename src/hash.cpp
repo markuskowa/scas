@@ -55,7 +55,7 @@ namespace scas {
 
   Hash::hash_t Hash::get_hash_binary(){
     unsigned int len = 0;
-    hash_t hash(digest_length);
+    hash_t hash;
 
     if (EVP_DigestFinal_ex(ctx, hash.data(), &len) != 1) {
       clear();
@@ -73,18 +73,11 @@ namespace scas {
   }
 
   std::string Hash::convert_hash_to_string(const hash_t& hash){
-    if (hash.size() != digest_length)
-      throw std::invalid_argument("Invalid hash length");
-
     return base64_encode(hash);
   }
 
   Hash::hash_t Hash::convert_string_to_hash(const std::string& string_hash){
     hash_t hash = base64_decode(string_hash);
-
-    if (hash.size() != digest_length ) {
-      throw std::invalid_argument("base64 encoded string length mismatched");
-    }
 
     return hash;
   }
@@ -105,7 +98,6 @@ namespace scas {
 
 
     hash_t binary_hash;
-    binary_hash.reserve(digest_length);
 
     for (size_t i = 0; i < string_hash.length(); i += 2) {
         std::string byte_str = string_hash.substr(i, 2);
@@ -118,7 +110,7 @@ namespace scas {
         std::istringstream ss(byte_str);
         ss >> std::hex >> byte;
 
-        binary_hash.push_back(byte);
+        binary_hash[i/2] = byte;
     }
 
     return binary_hash;
@@ -133,10 +125,6 @@ namespace scas {
   }
 
   std::string Hash::base64_encode(const hash_t& data){
-    if (data.empty()) {
-        return ""; // Handle empty input
-    }
-
     int encoded_len = (data.size() + 2) / 3 * 4; // Calculate encoded length (important!)
     std::string encoded(encoded_len, '\0');
 
@@ -155,15 +143,14 @@ namespace scas {
   }
 
   Hash::hash_t Hash::base64_decode(const std::string& base64_str) {
-    if (base64_str.empty()) {
-        return {};
-    }
+    if ((digest_length + 2) / 3 * 4 != base64_str.length())
+      throw std::invalid_argument("Invalid length of base64 encoded hash");
 
     std::string encoded(base64_str);
     std::replace(encoded.begin(), encoded.end(), '-', '/');
 
     int decoded_len = encoded.length();
-    hash_t decoded;
+    std::vector<unsigned char> decoded;
     decoded.resize(decoded_len);
 
 
@@ -200,7 +187,9 @@ namespace scas {
     decoded.resize(olength);
     EVP_ENCODE_CTX_free(ctx);
 
-    return decoded;
+    hash_t arr;
+    std::copy(decoded.begin(), decoded.end(), arr.begin());
+    return arr;
   }
 
 }

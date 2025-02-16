@@ -4,11 +4,13 @@
 
 #include <string>
 #include <vector>
+#include <array>
 #include <openssl/sha.h>
 #include <openssl/evp.h>
 
 
 namespace scas {
+
 
   /**
    * Handle SHA256 calculation
@@ -24,12 +26,12 @@ namespace scas {
       void clear();
 
     public:
-      typedef std::vector<unsigned char> hash_t;
+      using hash_t = std::array<unsigned char, SHA256_DIGEST_LENGTH>;
 
       Hash();
       ~Hash();
 
-      int get_hash_length() { return digest_length; };
+      static int get_hash_length() { return digest_length; };
 
       void update(const std::string& input);
       void update(const char* input, size_t n);
