@@ -1,3 +1,5 @@
+[![Build Pakage](https://github.com/markuskowa/scas/actions/workflows/nix-build.yml/badge.svg)](https://github.com/markuskowa/scas/actions/workflows/nix-build.yml)
+
 # SCAS - Simple Content Addressed Storage
 
 Filesystem based content addressed storage with garbage collection written in C++.
