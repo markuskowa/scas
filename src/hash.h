@@ -2,6 +2,9 @@
 //
 // SPDX-License-Identifier: GPL-3.0-only
 
+#ifndef SCAS_HASH_H
+#define SCAS_HASH_H
+
 #include <string>
 #include <vector>
 #include <array>
@@ -51,3 +54,5 @@ namespace scas {
       static hash_t base64_decode(const std::string& str);
   };
 }
+
+#endif /* SCAS_HASH_H */

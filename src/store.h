@@ -2,6 +2,9 @@
 //
 // SPDX-License-Identifier: GPL-3.0-only
 
+#ifndef SCAS_STORE_H
+#define SCAS_STORE_H
+
 #include <filesystem>
 #include <functional>
 
@@ -43,3 +46,6 @@ namespace scas {
   };
 
 }
+
+#endif /* SCAS_STORE_H */
+
