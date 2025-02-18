@@ -13,7 +13,7 @@ stdenv.mkDerivation {
   src = lib.cleanSource ./.;
 
   nativeBuildInputs = [ cmake ];
-  buildInputs = [ openssl catch2_3 ];
+  propagatedBuildInputs = [ openssl ];
   nativeCheckInputs = [ catch2_3 ];
 
   doCheck = true;
