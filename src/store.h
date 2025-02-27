@@ -31,6 +31,7 @@ namespace scas {
       void create_store_fs();
       bool store_fs_is_valid();
       bool file_is_in_store(const fs::path& file) const;
+      std::string get_hash_from_path(const fs::path& path) const;
       bool path_coincides_with_store(const fs::path& path) const;
       fs::path get_store_path(const std::string& hash);
       fs::path put(const std::string& content, std::string& hash_str);

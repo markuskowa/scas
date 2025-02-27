@@ -56,7 +56,19 @@ namespace scas {
     if (fs::is_regular_file(data_dir / file))
       return true;
 
+    if (path_coincides_with_store(file) && fs::is_regular_file(data_dir / fs::canonical(file).filename()))
+      return true;
+
     return false;
+  }
+
+  std::string Store::get_hash_from_path(const fs::path& path) const {
+    auto can_path = fs::canonical(path);
+
+    if ( file_is_in_store(can_path.filename()) )
+      return can_path.filename();
+
+    throw std::runtime_error("File not in store");
   }
 
   fs::path Store::get_store_path(const std::string& hash) {

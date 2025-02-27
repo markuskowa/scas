@@ -63,6 +63,8 @@ SCENARIO("Store creation and operation", "[store]") {
       std::string hash_ref;
       REQUIRE_NOTHROW( store.move_to_store(ofname, hash_ref) );
       REQUIRE( hash_ref == hash_str );
+      REQUIRE( store.file_is_in_store(ofname) );
+      REQUIRE( store.get_hash_from_path(ofname) == hash_str );
 
       THEN("Store is recognized as valid") {
         REQUIRE( store.verify_store() );
