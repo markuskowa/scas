@@ -165,8 +165,9 @@ namespace scas {
     if (fs::exists(link))
       throw std::runtime_error("Can not create link. File exists");
 
-    //FIXME: ensure it is relative to top level!? Or absolute?
-    fs::create_symlink(target_path, link);
+    // Caculate link target relative to link
+    auto link_target = fs::relative(target_path, link.has_parent_path() ? link.parent_path() : fs::current_path());
+    fs::create_symlink(link_target , link);
   }
 
   void Store::register_gc_link(const fs::path& target, const std::string& hash){
