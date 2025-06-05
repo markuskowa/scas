@@ -4,6 +4,11 @@
 
 #include <fstream>
 #include <iostream>
+#include <fcntl.h>    // For open(), ioctl()
+#include <unistd.h>   // For close()
+#include <sys/ioctl.h> // For ioctl()
+#include <linux/ioctl.h>
+#include <linux/fs.h>
 #include "store.h"
 
 namespace scas {
@@ -75,7 +80,30 @@ namespace scas {
     return data_dir / hash;
   }
 
-  fs::path Store::copy_to_store(const fs::path& path, std::string& hash_str){
+  bool Store::copy_reflink(fs::path source, fs::path target){
+    bool success = true;
+
+    auto source_fd = open(source.c_str(), O_RDONLY);
+    if (source_fd == -1)
+      throw std::invalid_argument("Opening of source file failed");
+
+    auto dest_fd = open(target.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0666);
+    if (dest_fd == -1) {
+      close(source_fd);
+      throw std::invalid_argument("Opening of target file failed");
+    }
+
+    if (ioctl(dest_fd, FICLONE, source_fd) == -1) {
+      success = false;
+    }
+
+    if (dest_fd != -1) close(dest_fd);
+    if (source_fd != -1) close(dest_fd);
+
+    return success;
+  }
+
+  fs::path Store::copy_to_store(const fs::path& path, std::string& hash_str, reflink rl){
     if (path_coincides_with_store(path))
       throw std::invalid_argument("Source file can not be in store's data directory");
 
@@ -86,10 +114,25 @@ namespace scas {
     hash_str = Hash::convert_hash_to_string(hash);
 
     auto target_path = data_dir / hash_str;
-    if (!fs::is_regular_file(target_path)) {
-      fs::copy(path, target_path);
-      seal_file(target_path);
+
+    if (fs::is_regular_file(target_path)){
+      std::cerr << "Skip " << target_path << ". File exists\n";
+      return target_path;
     }
+
+    // attempt reflink copy first
+    bool reflink_success = false;
+    if (rl == reflink::automatic || rl == reflink::always) {
+      reflink_success = copy_reflink(path, target_path);
+      if (rl == reflink::always && !reflink_success)
+        throw std::runtime_error("Reflink copy failed");
+    }
+
+    if (!reflink_success) {
+      fs::copy(path, target_path, fs::copy_options::overwrite_existing);
+    }
+
+    seal_file(target_path);
 
     return target_path;
   }
@@ -139,8 +182,8 @@ namespace scas {
     return target;
   }
 
-  fs::path Store::move_to_store(const fs::path& path, std::string& hash_str, bool add_gc_root) {
-    const fs::path target_path = copy_to_store(path, hash_str);
+  fs::path Store::move_to_store(const fs::path& path, std::string& hash_str, bool add_gc_root, reflink rl) {
+    const fs::path target_path = copy_to_store(path, hash_str, rl);
 
     fs::remove(path);
 

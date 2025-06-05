@@ -24,6 +24,7 @@ void show_help(const std::string& arg0) {
   cout << "" << endl;
   cout << "  -d directory  specify store path" << endl;
   cout << "  -s            move file to store and create gc protected symlink" << endl;
+  cout << "  -c            Do not attemp to perfrom a reflink copy" << endl;
   cout << "  If no file name is give input from stdin is read" << endl;
   cout << "" << endl;
   cout << "- Create link point to content:" << endl;
@@ -45,14 +46,18 @@ void command_add(int argc, char **argv){
   int opt = 0;
   fs::path dir;
   bool symlink = false;
+  scas::Store::reflink reflink = scas::Store::reflink::automatic;
 
-  while ((opt = getopt(argc, argv, "sd:")) != -1) {
+  while ((opt = getopt(argc, argv, "sd:c")) != -1) {
     switch (opt) {
       case 'd':
         dir = optarg;
         break;
       case 's':
         symlink = true;
+        break;
+      case 'c':
+        reflink = scas::Store::reflink::never;
         break;
       default:
         show_help(argv[0]);
@@ -84,10 +89,11 @@ void command_add(int argc, char **argv){
     for (; optind < argc; optind++){
       std::string hash;
       fs::path path;
+
       if (symlink)
-        path = store.move_to_store(argv[optind], hash);
+        path = store.move_to_store(argv[optind], hash, true, reflink);
       else
-        path = store.copy_to_store(argv[optind], hash);
+        path = store.copy_to_store(argv[optind], hash, reflink);
 
       std::cout << "created " << path << " (" << scas::Hash::base64_to_hex(hash) << ")" << std::endl;
     }

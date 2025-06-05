@@ -23,9 +23,16 @@ namespace scas {
       fs::path data_dir;
       fs::path gcroot_dir;
 
+      bool copy_reflink(fs::path source, fs::path target);
       void seal_file(fs::path target);
     public:
       Store(const fs::path& dir);
+
+      enum class reflink: int {
+        automatic,
+        never,
+        always
+      };
 
       fs::path get_dir() const { return dir; }
       void create_store_fs();
@@ -36,8 +43,8 @@ namespace scas {
       fs::path get_store_path(const std::string& hash);
       fs::path put(const std::string& content, std::string& hash_str);
       fs::path put_stream(std::function<const char*(size_t&)> callback, std::string& hash_str);
-      fs::path copy_to_store(const fs::path& path, std::string& hash_str);
-      fs::path move_to_store(const fs::path& path, std::string& hash, bool add_gc_root = true);
+      fs::path copy_to_store(const fs::path& path, std::string& hash_str, reflink rl = reflink::automatic);
+      fs::path move_to_store(const fs::path& path, std::string& hash, bool add_gc_root = true, reflink rl = reflink::automatic);
       void create_store_link(const fs::path& link, const std::string& hash);
       void register_gc_link(const fs::path& link, const std::string& hash);
       void collect_garbage();
