@@ -34,6 +34,9 @@ void show_help(const std::string& arg0) {
   cout << "" << endl;
   cout << "- Run garbage collection:" << endl;
   cout << "  " << basename << " gc <store directory>" << endl;
+  cout << "" << endl;
+  cout << "- Verify store:" << endl;
+  cout << "  " << basename << " verify <store directory>" << endl;
   exit(EXIT_FAILURE);
 }
 
@@ -136,6 +139,11 @@ void command_gc(const std::filesystem::path& dir){
   store.collect_garbage();
 }
 
+void command_verify(const std::filesystem::path& dir){
+  scas::Store store(dir);
+  if (!store.verify_store())
+    exit(EXIT_FAILURE);
+}
 
 int main(int argc, char** argv) {
   fs::path dir("dstore");
@@ -153,6 +161,9 @@ int main(int argc, char** argv) {
   } else if(std::string(argv[1]) == "gc") {
     if (argc != 3) show_help(argv[0]);
     command_gc(argv[2]);
+  } else if(std::string(argv[1]) == "verify") {
+    if (argc != 3) show_help(argv[0]);
+    command_verify(argv[2]);
   } else if(std::string(argv[1]) == "link") {
     optind = 2;
     command_link(argc, argv);

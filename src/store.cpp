@@ -314,24 +314,35 @@ namespace scas {
   }
 
   bool Store::verify_store() {
-    if (!store_fs_is_valid()) return false;
+    if (!store_fs_is_valid()) {
+      std::cerr << "Store file system layout invalid\n";
+      return false;
+    }
 
     // Check data directory
+    bool valid = true;
     for (auto const& entry : fs::directory_iterator{data_dir}) {
       fs::file_status status = fs::status(entry.path());
 
-      if (status.type() != fs::file_type::regular)
-        return false;
+      if (status.type() != fs::file_type::regular) {
+        std::cerr << "Not a regular file: " << entry.path() << std::endl;
+        valid = false;
+        continue;
+      }
 
       fs::perms permissions = status.permissions();
-      if ((permissions & (fs::perms::owner_write | fs::perms::group_write | fs::perms::others_write )) != fs::perms::none)
-        return false;
+      if ((permissions & (fs::perms::owner_write | fs::perms::group_write | fs::perms::others_write )) != fs::perms::none) {
+        std::cerr << "File is writable: " << entry.path() << std::endl;
+        valid = false;
+      }
 
       Hash::hash_t hash_bin = calc_file_hash(entry.path());
-      if (Hash::convert_hash_to_string(hash_bin) != entry.path().filename())
-        return false;
+      if (Hash::convert_hash_to_string(hash_bin) != entry.path().filename()) {
+        std::cerr << "Hash mismatch: " << entry.path() << std::endl;
+        valid = false;
+      }
 
     }
-    return true;
+    return valid;
   }
 }
