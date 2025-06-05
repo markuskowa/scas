@@ -1,5 +1,6 @@
 [![Build Pakage](https://github.com/markuskowa/scas/actions/workflows/nix-build.yml/badge.svg)](https://github.com/markuskowa/scas/actions/workflows/nix-build.yml)
 
+[![built with nix](https://builtwithnix.org/badge.svg)](https://builtwithnix.org)
 # SCAS - Simple Content Addressed Storage
 
 Filesystem based content addressed storage with garbage collection written in C++.
@@ -16,6 +17,10 @@ Filesystem based content addressed storage with garbage collection written in C+
 Usage:
 
 ```
+Simple content addressed storage utility
+
+Usage:
+
 - Create a new store directory structure:
   scas init <new_store_directory>
 
@@ -24,6 +29,7 @@ Usage:
 
   -d directory  specify store path
   -s            move file to store and create gc protected symlink
+  -c            Do not attemp to perfrom a reflink copy
   If no file name is give input from stdin is read
 
 - Create link point to content:
@@ -33,5 +39,8 @@ Usage:
 
 - Run garbage collection:
   scas gc <store directory>
+
+- Verify store:
+  scas verify <store directory>
 ```
 
